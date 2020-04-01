@@ -40,14 +40,12 @@ class RabbitMQ(Plugin, RedHatPlugin, DebianPlugin, UbuntuPlugin):
             for container in container_id:
                 self.add_cmd_output('docker logs {0} '.format(container))
                 self.add_cmd_output('docker exec -t {0} rabbitmqctl report'.format(container))
-                # rabbitmq-diagnostics only works if the plugin: management is installed and turned on for example (xenial installed v5.6.7
-                # from dec 2015 didnt have it by default)
-                # self.add_cmd_output('docker exec -t {0} rabbitmq-diagnostics check_port_connectivity'.format(container))
-                # self.add_cmd_output('docker exec -t {0} rabbitmq-diagnostics check_running'.format(container))
                 self.add_cmd_output('docker exec -t {0} rabbitmqctl list_unresponsive_queues'.format(container))
                 self.add_cmd_output('docker exec -t {0} rabbitmqctl list_queues'.format(container))
         else:
             self.add_cmd_output("rabbitmqctl report")
+            self.add_cmd_output("rabbitmqctl list_queues")
+            self.add_cmd_output("rabbitmqctl list_unresponsive_queues")
 
         self.add_copy_spec([
             "/etc/rabbitmq/*",
