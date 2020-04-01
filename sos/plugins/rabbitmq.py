@@ -20,7 +20,8 @@ class RabbitMQ(Plugin, RedHatPlugin, DebianPlugin, UbuntuPlugin):
         var_puppet_gen + '/etc/rabbitmq/rabbitmq.config'
     )
     packages = ('rabbitmq-server',)
-    """ regardless of given status for any container(docker,lxc, etc) , collect logs or data for any rabbitmq service"""
+    """ Regardless of given status(running, frozen, exited)
+    for any container(docker,lxc, etc) collect logs for RabbitMQ service"""
     def setup(self):
         container_status = self.exec_cmd(
             "docker ps --format='{{ .Image}}'"
@@ -39,9 +40,14 @@ class RabbitMQ(Plugin, RedHatPlugin, DebianPlugin, UbuntuPlugin):
         if in_container:
             for container in container_id:
                 self.add_cmd_output('docker logs {0} '.format(container))
-                self.add_cmd_output('docker exec -t {0} rabbitmqctl report'.format(container))
-                self.add_cmd_output('docker exec -t {0} rabbitmqctl list_unresponsive_queues'.format(container))
-                self.add_cmd_output('docker exec -t {0} rabbitmqctl list_queues'.format(container))
+                self.add_cmd_output(
+                    'docker exec -t {0} rabbitmqctl report'.format(container))
+                self.add_cmd_output(
+                    'docker exec -t {0} rabbitmqctl list_unresponsive_queues'.
+                    format(container))
+                self.add_cmd_output(
+                    'docker exec -t {0} rabbitmqctl list_queues'.format(
+                        container))
         else:
             self.add_cmd_output("rabbitmqctl report")
             self.add_cmd_output("rabbitmqctl list_queues")
