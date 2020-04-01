@@ -20,27 +20,32 @@ class RabbitMQ(Plugin, RedHatPlugin, DebianPlugin, UbuntuPlugin):
         var_puppet_gen + '/etc/rabbitmq/rabbitmq.config'
     )
     packages = ('rabbitmq-server',)
-
+    """ regardless of given status for any container(docker,lxc, etc) , collect logs or data for any rabbitmq service"""
     def setup(self):
         container_status = self.exec_cmd(
-            "docker ps -a --format='{{ .Image}}'"
+            "docker ps --format='{{ .Image}}'"
         )
-
         in_container = False
-        container_names = []
+        container_id = []
         if container_status['status'] == 0:
             for line in container_status['output'].splitlines():
                 if line.startswith("rabbitmq"):
                     in_container = True
-                    container_names.append(line)
+                    con = self.exec_cmd(
+                        "docker ps --format='{{ .ID}}'"
+                    )
+                    container_id.append(con['output'].splitlines())
 
         if in_container:
-            for container in container_names:
-                self.add_cmd_output('docker logs {0}'.format(container))
-                self.add_cmd_output(
-                    'docker exec -t {0} rabbitmqctl report'
-                    .format(container)
-                )
+            for container in container_id:
+                self.add_cmd_output('docker logs {0} '.format(container))
+                self.add_cmd_output('docker exec -t {0} rabbitmqctl report'.format(container))
+                # rabbitmq-diagnostics only works if the plugin: management is installed and turned on for example (xenial installed v5.6.7
+                # from dec 2015 didnt have it by default)
+                # self.add_cmd_output('docker exec -t {0} rabbitmq-diagnostics check_port_connectivity'.format(container))
+                # self.add_cmd_output('docker exec -t {0} rabbitmq-diagnostics check_running'.format(container))
+                self.add_cmd_output('docker exec -t {0} rabbitmqctl list_unresponsive_queues'.format(container))
+                self.add_cmd_output('docker exec -t {0} rabbitmqctl list_queues'.format(container))
         else:
             self.add_cmd_output("rabbitmqctl report")
 
