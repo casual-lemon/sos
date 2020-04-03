@@ -33,12 +33,12 @@ class RabbitMQ(Plugin, RedHatPlugin, DebianPlugin, UbuntuPlugin):
                 if line.startswith("rabbitmq"):
                     in_container = True
                     con = self.exec_cmd(
-                        "docker ps --format='{{ .ID}}'"
+                        "docker ps -a --format='{{ .ID}}'"
                     )
-                    container_id.append(con['output'].splitlines())
+                    container_id.append(con['output'])
 
         if in_container:
-            for container in container_id:
+            for container in container_id[0].splitlines():
                 self.add_cmd_output('docker logs {0} '.format(container))
                 self.add_cmd_output(
                     'docker exec -t {0} rabbitmqctl report'.format(container))
