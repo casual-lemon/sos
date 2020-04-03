@@ -23,13 +23,13 @@ class RabbitMQ(Plugin, RedHatPlugin, DebianPlugin, UbuntuPlugin):
     """ Regardless of given status(running, frozen, exited)
     for any container(docker,lxc, etc) collect logs for RabbitMQ service"""
     def setup(self):
-        container_status = self.exec_cmd(
+        image_name = self.exec_cmd(
             "docker ps --format='{{ .Image}}'"
         )
         in_container = False
         container_id = []
-        if container_status['status'] == 0:
-            for line in container_status['output'].splitlines():
+        if image_name['status'] == 0:
+            for line in image_name['output'].splitlines():
                 if line.startswith("rabbitmq"):
                     in_container = True
                     con = self.exec_cmd(
@@ -49,9 +49,11 @@ class RabbitMQ(Plugin, RedHatPlugin, DebianPlugin, UbuntuPlugin):
                     'docker exec -t {0} rabbitmqctl list_queues'.format(
                         container))
         else:
-            self.add_cmd_output("rabbitmqctl report")
-            self.add_cmd_output("rabbitmqctl list_queues")
-            self.add_cmd_output("rabbitmqctl list_unresponsive_queues")
+            self.add_cmd_output([
+                "rabbitmqctl report",
+                "rabbitmqctl list_queues",
+                "rabbitmqctl list_unresponsive_queues"
+            ])
 
         self.add_copy_spec([
             "/etc/rabbitmq/*",
