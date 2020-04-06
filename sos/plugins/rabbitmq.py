@@ -27,18 +27,18 @@ class RabbitMQ(Plugin, RedHatPlugin, DebianPlugin, UbuntuPlugin):
             "docker ps --format='{{ .Image}}'"
         )
         in_container = False
-        container_id = []
+        container_list = []
         if image_name['status'] == 0:
             for line in image_name['output'].splitlines():
                 if line.startswith("rabbitmq"):
                     in_container = True
-                    con = self.exec_cmd(
+                    container_id = self.exec_cmd(
                         "docker ps -a --format='{{ .ID}}'"
                     )
-                    container_id.append(con['output'])
+                    container_list.append(container_id['output'])
 
         if in_container:
-            for container in container_id[0].splitlines():
+            for container in container_list[0].splitlines():
                 self.add_cmd_output('docker logs {0} '.format(container))
                 self.add_cmd_output(
                     'docker exec -t {0} rabbitmqctl report'.format(container))
